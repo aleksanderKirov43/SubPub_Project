@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proto;
+option go_package = "SubPub_project/proto";
+
+import "google/api/annotations.proto";
+import "pubsub.proto";
+import "google/protobuf/empty.proto";
+
+service PubSub {
+  rpc Subscribe(SubscribeRequest) returns (stream Event) {
+    option (google.api.http) = {
+      get: "/v1/subscribe/{key}"
+    };
+  }
+
+  rpc Publish(PublishRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/publish"
+      body: "*"
+    };
+  }
+}

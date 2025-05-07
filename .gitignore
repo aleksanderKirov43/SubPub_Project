@@ -1,0 +1,4 @@
+# Эти файлы сгенерированы автоматически, их можно пересоздать через protoc
+proto/gateway.pb.gw.go
+proto/pubsub.pb.go
+proto/pubsub_grpc.pb.go
