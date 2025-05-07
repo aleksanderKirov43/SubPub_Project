@@ -26,6 +26,7 @@ func NewServer(pubsub subpub.SubPub) *Server {
 func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeServer) error {
 	sub, err := s.pubsub.Subscribe(req.Key, func(msg interface{}) {
 		if str, ok := msg.(string); ok {
+			log.Println("Отправка события подписчик:", str)
 			_ = stream.Send(&pb.Event{Data: str})
 		}
 	})

@@ -3,6 +3,7 @@ package subpub
 import (
 	"context"
 	"errors"
+	"log"
 	"sync"
 )
 
@@ -41,10 +42,11 @@ type subPub struct {
 }
 
 func (s *subPub) Subscribe(subject string, cb MessageHandler) (Subscription, error) {
+	log.Println("Создание подписки для:", subject)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
-		return nil, errors.New("Подписка уже закрыта, пока нельзя добавиьновые подписки")
+		return nil, errors.New("Подписка уже закрыта, пока нельзя добавить новые")
 	}
 
 	sub := &subscriber{
@@ -77,21 +79,29 @@ func (s *subPub) Subscribe(subject string, cb MessageHandler) (Subscription, err
 	}()
 
 	s.subjects[subject] = append(s.subjects[subject], sub)
+	log.Println("Подписка зарегистрирована для:", subject)
 	return &subscription{s, subject, sub}, nil
 }
 
 func (s *subPub) Publish(subject string, msg interface{}) error {
+	log.Println("Публикация вызвана:", subject, msg)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed {
 		return errors.New("Система закрыта")
 	}
+
 	subs := append([]*subscriber{}, s.subjects[subject]...)
+	if len(subs) == 0 {
+		log.Println("Нет подписчиков для:", subject)
+	}
+
 	for _, sub := range subs {
 		select {
 		case sub.ch <- msg:
+			log.Println("Сообщение отправлено подписчику:", sub)
 		default:
-			// Если подписчик не успевает обработать сообщение, оно не отправляется.
+			log.Println("Подписчик не смог обработать сообщение!")
 		}
 	}
 	return nil
