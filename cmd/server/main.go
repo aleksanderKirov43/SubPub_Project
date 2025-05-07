@@ -12,11 +12,12 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func runRESTServer() error {
 	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	err := pb.RegisterPubSubHandlerFromEndpoint(context.Background(), mux, "localhost:8082", opts)
 	if err != nil {
