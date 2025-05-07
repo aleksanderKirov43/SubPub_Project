@@ -51,7 +51,7 @@ func (s *subPub) Subscribe(subject string, cb MessageHandler) (Subscription, err
 
 	sub := &subscriber{
 		cb:   cb,
-		ch:   make(chan interface{}, 16),
+		ch:   make(chan interface{}, 32),
 		done: make(chan struct{}),
 	}
 
@@ -97,6 +97,7 @@ func (s *subPub) Publish(subject string, msg interface{}) error {
 	}
 
 	for _, sub := range subs {
+		log.Println("Передача в канал подписчика:", msg)
 		select {
 		case sub.ch <- msg:
 			log.Println("Сообщение отправлено подписчику:", sub)
@@ -145,6 +146,7 @@ type subscription struct {
 }
 
 func (s *subscription) Unsubscribe() {
+	log.Println("Отписка от ключа:", s.subject)
 	s.sp.mu.Lock()
 	defer s.sp.mu.Unlock()
 

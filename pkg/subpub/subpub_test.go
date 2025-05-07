@@ -3,6 +3,7 @@ package subpub
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestSubscribe(t *testing.T) {
@@ -31,6 +32,8 @@ func TestPublish(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Ошибка публикации: %v", err)
 	}
+
+	time.Sleep(200 * time.Millisecond)
 
 	if !received {
 		t.Errorf("Сообщение не получено подписчиком")
