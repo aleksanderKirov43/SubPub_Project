@@ -38,10 +38,8 @@ func (s *SubPub) Subscribe(ctx context.Context, subject string, cb MessageHandle
 	s.subscribers[subject] = append(s.subscribers[subject], sub)
 
 	go func() {
-		select {
-		case <-ctx.Done():
-			sub.Unsubscribe()
-		}
+		<-ctx.Done()
+		sub.Unsubscribe()
 	}()
 
 	log.Println("Подписка зарегистрирована для ключа:", subject)
@@ -91,7 +89,7 @@ func (s *SubPub) Close(ctx context.Context) error {
 		}
 	}
 
-	s.subscribers = make(map[string][]*Subscriber) // ✅ Очищаем подписчиков после закрытия
+	s.subscribers = make(map[string][]*Subscriber)
 	log.Println("Система подписок закрыта")
 	return nil
 }

@@ -24,14 +24,12 @@ func NewPublisher(ctx context.Context) *Publisher {
 		closeCh:  make(chan struct{}),
 	}
 	go func() {
-		select {
-		case <-ctx.Done():
-			log.Println("Закрываем `Publisher` по контексту")
-			p.mu.Lock()
-			p.closed = true
-			close(p.closeCh)
-			p.mu.Unlock()
-		}
+		<-ctx.Done()
+		log.Println("Закрываем `Publisher` по контексту")
+		p.mu.Lock()
+		p.closed = true
+		close(p.closeCh)
+		p.mu.Unlock()
 	}()
 
 	return p
