@@ -20,7 +20,6 @@ func TestUnsubscribe(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Ошибка публикации: %v", err)
 	}
-
 	if received {
 		t.Errorf("Ошибка! Отписанный подписчик получил сообщение")
 	}

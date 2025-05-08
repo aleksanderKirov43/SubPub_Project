@@ -17,7 +17,7 @@ type Server struct {
 	pubsub subpub.SubPubInterface
 }
 
-func NewServer(ctx context.Context, pubsub subpub.SubPubInterface) *Server {
+func NewServer(pubsub subpub.SubPubInterface) *Server {
 	return &Server{
 		pubsub: pubsub,
 	}
@@ -33,7 +33,7 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeS
 		}
 	})
 	if err != nil {
-		return status.Errorf(codes.Internal, "Ошибка приложения: %v", err)
+		return status.Errorf(codes.Internal, "Ошибка подписки: %v", err)
 	}
 	<-ctx.Done()
 	sub.Unsubscribe()

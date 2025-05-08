@@ -32,7 +32,7 @@ func (m *MockSubscriber) Close() {
 func TestPublishRPC(t *testing.T) {
 	ctx := context.Background()
 	pubsub := subpub.NewSubPub()
-	server := NewServer(ctx, pubsub)
+	server := NewServer(pubsub)
 
 	received := false
 

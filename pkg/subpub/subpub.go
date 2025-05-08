@@ -41,7 +41,6 @@ func (s *SubPub) Subscribe(ctx context.Context, subject string, cb MessageHandle
 		<-ctx.Done()
 		sub.Unsubscribe()
 	}()
-
 	log.Println("Подписка зарегистрирована для ключа:", subject)
 
 	return sub, nil
@@ -80,7 +79,6 @@ func (s *SubPub) Close(ctx context.Context) error {
 	if s.closed {
 		return nil
 	}
-
 	s.closed = true
 
 	for _, subs := range s.subscribers {

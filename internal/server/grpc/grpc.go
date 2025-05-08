@@ -13,12 +13,12 @@ import (
 )
 
 func RunServer(listener net.Listener) {
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	grpcServer := grpc.NewServer()
 	pubsub := subpub.NewSubPub()
-	server := app.NewServer(ctx, pubsub)
+	server := app.NewServer(pubsub)
 
 	pb.RegisterPubSubServer(grpcServer, server)
 
