@@ -14,10 +14,10 @@ import (
 
 type Server struct {
 	pb.UnimplementedPubSubServer
-	pubsub subpub.SubPub
+	pubsub subpub.SubPubInterface
 }
 
-func NewServer(pubsub subpub.SubPub) *Server {
+func NewServer(pubsub subpub.SubPubInterface) *Server {
 	return &Server{
 		pubsub: pubsub,
 	}
