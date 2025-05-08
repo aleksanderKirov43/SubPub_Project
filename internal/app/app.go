@@ -17,14 +17,16 @@ type Server struct {
 	pubsub subpub.SubPubInterface
 }
 
-func NewServer(pubsub subpub.SubPubInterface) *Server {
+func NewServer(ctx context.Context, pubsub subpub.SubPubInterface) *Server {
 	return &Server{
 		pubsub: pubsub,
 	}
 }
 
 func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeServer) error {
-	sub, err := s.pubsub.Subscribe(req.Key, func(msg interface{}) {
+	ctx := stream.Context()
+
+	sub, err := s.pubsub.Subscribe(ctx, req.Key, func(msg interface{}) {
 		if str, ok := msg.(string); ok {
 			log.Println("Отправка события подписчик:", str)
 			_ = stream.Send(&pb.Event{Data: str})
@@ -33,14 +35,14 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeS
 	if err != nil {
 		return status.Errorf(codes.Internal, "Ошибка приложения: %v", err)
 	}
-	<-stream.Context().Done()
+	<-ctx.Done()
 	sub.Unsubscribe()
 	return nil
 }
 
 func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*emptypb.Empty, error) {
 	log.Printf("Публикация: key = %s, data = %s", req.Key, req.Data) // Для проверки Postman
-	err := s.pubsub.Publish(req.Key, req.Data)
+	err := s.pubsub.Publish(ctx, req.Key, req.Data)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Ошибка публикации: %v", err)
 	}

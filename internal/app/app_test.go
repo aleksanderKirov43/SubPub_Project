@@ -30,12 +30,13 @@ func (m *MockSubscriber) Close() {
 }
 
 func TestPublishRPC(t *testing.T) {
+	ctx := context.Background()
 	pubsub := subpub.NewSubPub()
-	server := NewServer(pubsub)
+	server := NewServer(ctx, pubsub)
 
 	received := false
 
-	_, _ = pubsub.Subscribe("test-key", func(msg interface{}) {
+	_, _ = pubsub.Subscribe(ctx, "test-key", func(msg interface{}) {
 		received = true
 	})
 
@@ -57,13 +58,14 @@ func TestPublishRPC(t *testing.T) {
 }
 
 func TestSubscribeRPC(t *testing.T) {
+	ctx := context.Background()
 	pubsub := subpub.NewSubPub()
 
 	sub := NewMockSubscriber()
-	_, _ = pubsub.Subscribe("test-key", sub.Handler) // Подключаем подписчика
+	_, _ = pubsub.Subscribe(ctx, "test-key", sub.Handler) // Подключаем подписчика
 
 	data := "test text"
-	_ = pubsub.Publish("test-key", data)
+	_ = pubsub.Publish(ctx, "test-key", data)
 
 	time.Sleep(200 * time.Millisecond)
 

@@ -1,26 +1,31 @@
 package subpub
 
 import (
+	"context"
+	"log"
 	"testing"
 	"time"
 )
 
 func TestPublish(t *testing.T) {
+	ctx := context.Background()
 	pubsub := NewSubPub()
-	received := false
+	done := make(chan struct{})
 
-	_, _ = pubsub.Subscribe("test-key", func(msg interface{}) {
-		received = true
+	log.Println("Тест: Создаём подписку на `test-key`")
+	_, _ = pubsub.Subscribe(ctx, "test-key", func(msg interface{}) {
+		done <- struct{}{}
 	})
 
-	err := pubsub.Publish("test-key", "Hello, world!")
+	err := pubsub.Publish(ctx, "test-key", "Hello, VKTeam!")
 	if err != nil {
 		t.Fatalf("Ошибка публикации: %v", err)
 	}
 
-	time.Sleep(200 * time.Millisecond)
-
-	if !received {
-		t.Errorf("Сообщение не получено подписчиком")
+	select {
+	case <-done:
+		t.Logf("Сообщение доставлено подписчику!")
+	case <-time.After(time.Second):
+		t.Errorf("Таймаут! Сообщение не доставлено подписчику")
 	}
 }

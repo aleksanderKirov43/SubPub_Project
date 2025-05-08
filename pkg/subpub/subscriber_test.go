@@ -1,15 +1,27 @@
 package subpub
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestUnsubscribe(t *testing.T) {
+	ctx := context.Background()
 	pubsub := NewSubPub()
-	sub, _ := pubsub.Subscribe("test-key", func(msg interface{}) {})
+	received := false
+
+	sub, _ := pubsub.Subscribe(ctx, "test-key", func(msg interface{}) {
+		received = true
+	})
 
 	sub.Unsubscribe()
 
-	err := pubsub.Publish("test-key", "Hello, world!")
+	err := pubsub.Publish(ctx, "test-key", "Hello, world!")
 	if err != nil {
 		t.Fatalf("Ошибка публикации: %v", err)
+	}
+
+	if received {
+		t.Errorf("Ошибка! Отписанный подписчик получил сообщение")
 	}
 }

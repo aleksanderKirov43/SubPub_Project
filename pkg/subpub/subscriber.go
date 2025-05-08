@@ -1,6 +1,7 @@
 package subpub
 
 import (
+	"context"
 	"log"
 	"sync"
 )
@@ -19,7 +20,7 @@ type Subscription interface {
 	Unsubscribe()
 }
 
-func NewSubscriber(cb MessageHandler) *Subscriber {
+func NewSubscriber(ctx context.Context, cb MessageHandler) *Subscriber {
 	sub := &Subscriber{
 		cb:   cb,
 		ch:   make(chan interface{}, 32),
@@ -41,6 +42,11 @@ func NewSubscriber(cb MessageHandler) *Subscriber {
 					return
 				}
 				sub.cb(msg)
+
+			case <-ctx.Done():
+				sub.close()
+				return
+
 			case <-sub.done:
 				return
 			}
