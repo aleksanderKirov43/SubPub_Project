@@ -29,5 +29,5 @@ func (a *App) Subscribe(ctx context.Context, subject string, handler subpub.Mess
 }
 
 func (a *App) Publish(ctx context.Context, subject string, msg interface{}) error {
-	return a.Publisher.Publish(ctx, subject, msg)
+	return a.PubSub.Publish(ctx, subject, msg)
 }
