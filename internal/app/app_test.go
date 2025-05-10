@@ -5,76 +5,43 @@ import (
 	"testing"
 	"time"
 
-	"SubPub_project/pkg/subpub"
-	pb "SubPub_project/proto"
+	"SubPub_project/pkg/logger"
 )
 
-type MockSubscriber struct {
-	ch   chan interface{}
-	done chan struct{}
-}
+func TestAppPublishAndSubscribe(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 
-func NewMockSubscriber() *MockSubscriber {
-	return &MockSubscriber{
-		ch:   make(chan interface{}, 1), // Буферизованный канал
-		done: make(chan struct{}),
-	}
-}
+	log := logger.NewLogger()
 
-func (m *MockSubscriber) Handler(msg interface{}) {
-	m.ch <- msg
-}
+	appInstance := NewApp(ctx, log)
 
-func (m *MockSubscriber) Close() {
-	close(m.done)
-}
+	subject := "test-subject"
+	messagePublished := "hello, teamVK"
 
-func TestPublishRPC(t *testing.T) {
-	ctx := context.Background()
-	pubsub := subpub.NewSubPub()
-	server := NewServer(pubsub)
+	ch := make(chan string, 1)
 
-	received := false
-
-	_, _ = pubsub.Subscribe(ctx, "test-key", func(msg interface{}) {
-		received = true
+	subscription, err := appInstance.Subscribe(ctx, subject, func(msg interface{}) {
+		if s, ok := msg.(string); ok {
+			ch <- s
+		}
 	})
-
-	req := &pb.PublishRequest{
-		Key:  "test-key",
-		Data: "test-Data",
-	}
-
-	_, err := server.Publish(context.Background(), req)
 	if err != nil {
-		t.Fatalf("Ошибка публикации через gRPC: %v", err)
+		t.Fatalf("Ошибка подписки: %v", err)
 	}
+	defer subscription.Unsubscribe()
 
-	time.Sleep(100 * time.Millisecond)
-
-	if !received {
-		t.Errorf("Сообщение не получено подписчиком")
+	err = appInstance.Publish(ctx, subject, messagePublished)
+	if err != nil {
+		t.Fatalf("Ошибка публикации: %v", err)
 	}
-}
-
-func TestSubscribeRPC(t *testing.T) {
-	ctx := context.Background()
-	pubsub := subpub.NewSubPub()
-
-	sub := NewMockSubscriber()
-	_, _ = pubsub.Subscribe(ctx, "test-key", sub.Handler) // Подключаем подписчика
-
-	data := "test text"
-	_ = pubsub.Publish(ctx, "test-key", data)
-
-	time.Sleep(200 * time.Millisecond)
 
 	select {
-	case received := <-sub.ch:
-		if received != data {
-			t.Errorf("Ожидали сообщение %s, но получили %v", data, received)
+	case received := <-ch:
+		if received != messagePublished {
+			t.Errorf("Ожидали сообщение %q, но получено %q", messagePublished, received)
 		}
-	default:
+	case <-time.After(1 * time.Second):
 		t.Errorf("Сообщение не получено подписчиком")
 	}
 }
