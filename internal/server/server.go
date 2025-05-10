@@ -56,10 +56,7 @@ func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*emptypb.
 	return &emptypb.Empty{}, nil
 }
 
-func Run(cfg *config.Config) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func Run(ctx context.Context, cfg *config.Config) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPCPort))
 	if err != nil {
 		logger.NewLogger().Error("Не удалось прослушать порт: %v", err)
@@ -77,7 +74,7 @@ func Run(cfg *config.Config) {
 			logger.NewLogger().Error("Ошибка запуска REST сервера: %v", err)
 		}
 
-		if err := grpcServer.Serve(listener); err != nil {
+		if err = grpcServer.Serve(listener); err != nil {
 			logger.NewLogger().Error("Ошибка gRPC сервера: %v", err)
 		}
 	}()

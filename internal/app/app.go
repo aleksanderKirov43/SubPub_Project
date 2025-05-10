@@ -14,6 +14,7 @@ type App struct {
 }
 
 func NewApp(ctx context.Context, logInstance logger.Logger) *App {
+
 	publisher := subpub.NewPublisher(ctx, logInstance)
 	pubsub := subpub.NewSubPub()
 
