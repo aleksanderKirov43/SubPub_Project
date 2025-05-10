@@ -101,7 +101,7 @@ type UnsafePubSubServer interface {
 	mustEmbedUnimplementedPubSubServer()
 }
 
-func RegisterPubSubServer(s grpc.ServiceRegistrar, srv PubSubServer) {
+func RegisterPubSubServer(server *grpc.Server, srv PubSubServer) {
 	// If the following call pancis, it indicates UnimplementedPubSubServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
@@ -109,7 +109,7 @@ func RegisterPubSubServer(s grpc.ServiceRegistrar, srv PubSubServer) {
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&PubSub_ServiceDesc, srv)
+	server.RegisterService(&PubSub_ServiceDesc, srv)
 }
 
 func _PubSub_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {

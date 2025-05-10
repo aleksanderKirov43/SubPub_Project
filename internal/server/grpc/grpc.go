@@ -2,27 +2,29 @@ package grpc
 
 import (
 	"SubPub_project/internal/app"
-	"SubPub_project/pkg/subpub"
+	"SubPub_project/internal/server"
+	"SubPub_project/pkg/logger"
 	pb "SubPub_project/proto"
 
 	"context"
-	"log"
 	"net"
 
 	"google.golang.org/grpc"
 )
 
 func RunServer(listener net.Listener) {
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	grpcServer := grpc.NewServer()
-	pubsub := subpub.NewSubPub()
-	server := app.NewServer(pubsub)
+	logInstance := logger.NewLogger()
+	appInstance := app.NewApp(ctx, logInstance)
 
-	pb.RegisterPubSubServer(grpcServer, server)
+	grpcServer := grpc.NewServer()
+	serverInstance := server.NewServer(appInstance.PubSub)
+
+	pb.RegisterPubSubServer(grpcServer, serverInstance)
 
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Ошибка gRPC сервера: %v", err)
+		logger.NewLogger().Error("Ошибка gRPC сервера: %v", err)
 	}
 }

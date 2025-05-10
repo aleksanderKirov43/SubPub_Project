@@ -1,9 +1,10 @@
 package subpub
 
 import (
+	"SubPub_project/pkg/logger"
+
 	"context"
 	"errors"
-	"log"
 	"sync"
 )
 
@@ -12,20 +13,22 @@ type Publisher struct {
 	subjects map[string][]*Subscriber
 	closed   bool
 	closeCh  chan struct{}
+	log      logger.Logger
 }
 
 type PublisherInterface interface {
 	Publish(ctx context.Context, subject string, msg interface{}) error
 }
 
-func NewPublisher(ctx context.Context) *Publisher {
+func NewPublisher(ctx context.Context, log logger.Logger) *Publisher {
 	p := &Publisher{
 		subjects: make(map[string][]*Subscriber),
 		closeCh:  make(chan struct{}),
+		log:      log,
 	}
 	go func() {
 		<-ctx.Done()
-		log.Println("Закрываем `Publisher` по контексту")
+		p.log.Info("Закрываем `Publisher` по контексту")
 		p.mu.Lock()
 		p.closed = true
 		close(p.closeCh)
@@ -37,7 +40,7 @@ func NewPublisher(ctx context.Context) *Publisher {
 
 func (p *Publisher) Publish(ctx context.Context, subject string, msg interface{}) error {
 
-	log.Println("Публикация вызвана:", subject, "сообщение: ", msg)
+	p.log.Info("Публикация вызвана:", subject, "сообщение: ", msg)
 
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -48,19 +51,19 @@ func (p *Publisher) Publish(ctx context.Context, subject string, msg interface{}
 
 	subs := append([]*Subscriber{}, p.subjects[subject]...)
 	if len(subs) == 0 {
-		log.Println("Нет подписчиков для:", subject)
+		p.log.Info("Нет подписчиков для: %s", subject)
 	}
 
 	for _, sub := range subs {
-		log.Println("Передача сообщения подписчику:", msg)
+		p.log.Info("Передача сообщения подписчику:", msg)
 
 		select {
 		case sub.ch <- msg:
-			log.Println("Сообщение отправлено подписчику:", sub)
+			p.log.Info("Сообщение отправлено подписчику:", sub)
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			log.Println("Подписчик не смог обработать сообщение!")
+			p.log.Info("Подписчик не смог обработать сообщение!")
 		}
 	}
 	return nil

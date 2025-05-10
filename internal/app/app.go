@@ -1,50 +1,33 @@
 package app
 
 import (
+	"SubPub_project/pkg/logger"
 	"SubPub_project/pkg/subpub"
-	pb "SubPub_project/proto"
 
 	"context"
-	"log"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type Server struct {
-	pb.UnimplementedPubSubServer
-	pubsub subpub.SubPubInterface
+type App struct {
+	PubSub    subpub.SubPubInterface
+	Publisher subpub.PublisherInterface
+	Logger    logger.Logger
 }
 
-func NewServer(pubsub subpub.SubPubInterface) *Server {
-	return &Server{
-		pubsub: pubsub,
+func NewApp(ctx context.Context, logInstance logger.Logger) *App {
+	publisher := subpub.NewPublisher(ctx, logInstance)
+	pubsub := subpub.NewSubPub()
+
+	return &App{
+		PubSub:    pubsub,
+		Publisher: publisher,
+		Logger:    logInstance,
 	}
 }
 
-func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeServer) error {
-	ctx := stream.Context()
-
-	sub, err := s.pubsub.Subscribe(ctx, req.Key, func(msg interface{}) {
-		if str, ok := msg.(string); ok {
-			log.Println("Отправка события подписчик:", str)
-			_ = stream.Send(&pb.Event{Data: str})
-		}
-	})
-	if err != nil {
-		return status.Errorf(codes.Internal, "Ошибка подписки: %v", err)
-	}
-	<-ctx.Done()
-	sub.Unsubscribe()
-	return nil
+func (a *App) Subscribe(ctx context.Context, subject string, handler subpub.MessageHandler) (subpub.Subscription, error) {
+	return a.PubSub.Subscribe(ctx, subject, handler)
 }
 
-func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*emptypb.Empty, error) {
-	log.Printf("Публикация: key = %s, data = %s", req.Key, req.Data) // Для проверки Postman
-	err := s.pubsub.Publish(ctx, req.Key, req.Data)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Ошибка публикации: %v", err)
-	}
-	return &emptypb.Empty{}, nil
+func (a *App) Publish(ctx context.Context, subject string, msg interface{}) error {
+	return a.Publisher.Publish(ctx, subject, msg)
 }
