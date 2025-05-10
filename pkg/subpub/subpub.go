@@ -1,8 +1,6 @@
 package subpub
 
 import (
-	"SubPub_project/pkg/logger"
-
 	"context"
 	"fmt"
 	"sync"
@@ -27,6 +25,8 @@ func NewSubPub() SubPubInterface {
 	}
 }
 
+var ErrPubSubClosed = fmt.Errorf("система подписок закрыта")
+
 func (s *SubPub) Subscribe(ctx context.Context, subject string, cb MessageHandler) (Subscription, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -42,12 +42,12 @@ func (s *SubPub) Subscribe(ctx context.Context, subject string, cb MessageHandle
 		<-ctx.Done()
 		sub.Unsubscribe()
 	}()
-	logger.NewLogger().Info("Подписка зарегистрирована для ключа:", subject)
 
 	return sub, nil
 }
 
 func (s *SubPub) Publish(ctx context.Context, subject string, msg interface{}) error {
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -57,17 +57,15 @@ func (s *SubPub) Publish(ctx context.Context, subject string, msg interface{}) e
 
 	subs := s.subscribers[subject]
 	if len(subs) == 0 {
-		logger.NewLogger().Info("Нет подписчиков для:", subject)
 		return nil
 	}
 
 	for _, sub := range subs {
-		logger.NewLogger().Info("Отправка сообщения подписчику:", msg)
 		select {
 		case sub.ch <- msg:
-			logger.NewLogger().Info("Сообщение доставлено")
+			fmt.Println("Сообщение доставлено")
 		default:
-			logger.NewLogger().Info("Подписчик не успел обработать сообщение!")
+			fmt.Println("Подписчик не успел обработать сообщение!")
 		}
 	}
 	return nil
@@ -89,8 +87,6 @@ func (s *SubPub) Close(ctx context.Context) error {
 	}
 
 	s.subscribers = make(map[string][]*Subscriber)
-	logger.NewLogger().Info("Система подписок закрыта")
+	fmt.Println("Система подписок закрыта")
 	return nil
 }
-
-var ErrPubSubClosed = fmt.Errorf("система подписок закрыта")

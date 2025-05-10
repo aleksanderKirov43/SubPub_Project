@@ -1,7 +1,6 @@
 package config
 
 import (
-	"SubPub_project/pkg/logger"
 	"github.com/spf13/viper"
 )
 
@@ -20,13 +19,10 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	logger.NewLogger().Error("Файл `config.yaml` загружен!")
-
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
 
-	logger.NewLogger().Error("Конфигурация загружена:", cfg)
 	return &cfg, nil
 }
