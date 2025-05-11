@@ -1,8 +1,8 @@
 package subpub
 
 import (
-	"SubPub_project/pkg/logger"
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -56,6 +56,6 @@ func NewSubscriber(ctx context.Context, cb MessageHandler) *Subscriber {
 }
 
 func (s *Subscriber) Unsubscribe() {
-	logger.NewLogger().Info("Отписка от подписки:")
+	fmt.Println("Отписка от подписки:")
 	s.close()
 }

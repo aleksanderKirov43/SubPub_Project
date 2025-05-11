@@ -39,7 +39,7 @@ func (s *SubPub) Subscribe(ctx context.Context, subject string, cb MessageHandle
 	s.subscribers[subject] = append(s.subscribers[subject], sub)
 
 	go func() {
-		<-ctx.Done()
+		//<-ctx.Done()
 		sub.Unsubscribe()
 	}()
 
@@ -63,7 +63,7 @@ func (s *SubPub) Publish(ctx context.Context, subject string, msg interface{}) e
 	for _, sub := range subs {
 		select {
 		case sub.ch <- msg:
-			fmt.Println("Сообщение доставлено")
+			fmt.Println("Сообщение доставлено", sub)
 		default:
 			fmt.Println("Подписчик не успел обработать сообщение!")
 		}

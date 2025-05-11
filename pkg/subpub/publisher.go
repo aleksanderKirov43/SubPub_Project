@@ -63,7 +63,7 @@ func (p *Publisher) Publish(ctx context.Context, subject string, msg interface{}
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			p.log.Info("Подписчик не смог обработать сообщение!")
+			p.log.Info("Подписчик не смог обработать сообщение, для подписчика", sub)
 		}
 	}
 	return nil

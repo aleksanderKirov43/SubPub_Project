@@ -29,9 +29,10 @@ type Server struct {
 	log    logger.Logger
 }
 
-func NewServer(pubsub subpub.SubPubInterface) *Server {
+func NewServer(pubsub subpub.SubPubInterface, log logger.Logger) *Server {
 	return &Server{
 		pubsub: pubsub,
+		log:    log,
 	}
 }
 
@@ -40,8 +41,11 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeS
 
 	sub, err := s.pubsub.Subscribe(ctx, req.Key, func(msg interface{}) {
 		if str, ok := msg.(string); ok {
+			fmt.Println("Тест")
 			s.log.Info("Отправка события подписчику:", str)
-			_ = stream.Send(&pb.Event{Data: str})
+			if err := stream.Send(&pb.Event{Data: str}); err != nil {
+				s.log.Error("Ошибка отправки: %v", err)
+			}
 		}
 	})
 	if err != nil {
@@ -75,7 +79,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 	// 2. Инициализация gRPC сервера
 	appInstance := app.NewApp(ctx, log)
 	grpcServer := grpc.NewServer()
-	pb.RegisterPubSubServer(grpcServer, NewServer(appInstance.PubSub))
+	pb.RegisterPubSubServer(grpcServer, NewServer(appInstance.PubSub, log))
 
 	// 3. Запуск HTTP Gateway сервера в отдельной горутине
 	go func() {
@@ -83,7 +87,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 		endpoint := fmt.Sprintf("localhost:%d", cfg.GRPCPort)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-		if err := pb.RegisterPubSubHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
+		if err = pb.RegisterPubSubHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
 			log.Error("Ошибка подключения HTTP Gateway к gRPC: %v", err)
 			return
 		}
@@ -104,7 +108,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 	}()
 
 	log.Info("gRPC сервер запущен на порту: %d", cfg.GRPCPort)
-	if err := grpcServer.Serve(listener); err != nil {
+	if err = grpcServer.Serve(listener); err != nil {
 		log.Error("Ошибка gRPC сервера: %v", err)
 	}
 }
