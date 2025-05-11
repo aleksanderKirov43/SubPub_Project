@@ -14,7 +14,7 @@ func main() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Println("Ошибка загрузки конфигурации: %v", err)
+		log.Printf("Ошибка загрузки конфигурации: %v", err)
 	}
 	server.Run(ctx, cfg)
 }
