@@ -57,5 +57,6 @@ func NewSubscriber(ctx context.Context, cb MessageHandler) *Subscriber {
 
 func (s *Subscriber) Unsubscribe() {
 	fmt.Println("Отписка от подписки:")
+	close(s.ch)
 	s.close()
 }

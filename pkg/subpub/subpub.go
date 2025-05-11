@@ -62,6 +62,8 @@ func (s *SubPub) Publish(ctx context.Context, subject string, msg interface{}) e
 
 	for _, sub := range subs {
 		select {
+		case <-sub.done: //Проверяем, активен ли подписчик
+			continue
 		case sub.ch <- msg:
 			fmt.Println("Сообщение доставлено", sub)
 		default:
