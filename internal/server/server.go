@@ -58,7 +58,7 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.PubSub_SubscribeS
 
 func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*emptypb.Empty, error) {
 
-	fmt.Println("Публикация: key = %s, data = %s", req.Key, req.Data) // Для проверки Postman
+	fmt.Printf("Публикация: key = %s, data = %s", req.Key, req.Data) // Для проверки Postman
 	err := s.pubsub.Publish(ctx, req.Key, req.Data)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Ошибка публикации: %v", err)
